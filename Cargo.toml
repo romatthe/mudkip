@@ -1,0 +1,6 @@
+[package]
+name = "romulator"
+version = "0.1.0"
+authors = ["romatthe <robin.mattheussen@gmail.com>"]
+
+[dependencies]
