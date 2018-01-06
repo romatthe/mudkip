@@ -40,19 +40,33 @@ pub enum AddressingMode {
 
 // Decodes a single-byte opcode into a richer Instruction data structure
 pub fn decode(opcode: OpCode) -> Instruction {
-    Instruction::new(Mnemonic::BRK, AddressingMode::Immediate, 0x00)
+    let (mnemonic, mode, cycles) =
+        match opcode {
+            0xa9 => (Mnemonic::LDA, AddressingMode::Immediate,            2),
+            0xa5 => (Mnemonic::LDA, AddressingMode::ZeroPage,             3),
+            0xb5 => (Mnemonic::LDA, AddressingMode::ZeroPageIndexedX,     4),
+            0xad => (Mnemonic::LDA, AddressingMode::Absolute,             4),
+            0xbd => (Mnemonic::LDA, AddressingMode::IndexedX,             4),
+            0xb9 => (Mnemonic::LDA, AddressingMode::IndexedY,             4),
+            0xa1 => (Mnemonic::LDA, AddressingMode::PreIndexedIndirect,   6),
+            0xb1 => (Mnemonic::LDA, AddressingMode::PostIndexedIndirect,  5),
+            _    => panic!("Whoops")
+        };
+
+    Instruction::new(opcode, mnemonic, mode, cycles)
 }
 
 #[derive(Debug)]
 pub struct Instruction {
+    pub opcode: OpCode,
     pub mnemonic: Mnemonic,
     pub mode: AddressingMode,
-    pub opcode: OpCode
+    pub cycles: u8
 }
 
 impl Instruction {
-    pub fn new(mnemonic: Mnemonic, mode: AddressingMode, opcode: OpCode) -> Instruction {
-        Instruction { mnemonic: mnemonic, mode: mode, opcode: opcode }
+    fn new(opcode: OpCode, mnemonic: Mnemonic, mode: AddressingMode, cycles: u8) -> Instruction {
+        Instruction { opcode: opcode, mnemonic: mnemonic, mode: mode, cycles: cycles }
     }
 }
 
