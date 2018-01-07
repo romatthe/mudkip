@@ -38,6 +38,26 @@ pub enum AddressingMode {
     Relative,               // 1-byte signed operand is added to the program counter        eg: BEQ $04
 }
 
+// Structs for each addressing mode that implement the Addressing trait
+struct ImmediateAddressing;
+struct ZeroPageAddressing;
+struct AbsoluteAddressing;
+struct ImpliedAddressing;
+struct AccumulatorAddressing;
+struct IndexedXAddressing;
+struct IndexedYAddressing;
+struct ZeroPageIndexedXAddressing;
+struct ZeroPageIndexedYAddressing;
+struct IndirectAddressing;
+struct PreIndexedIndirect;
+struct PostIndexedIndirectAddressing;
+struct RelativeAddressing;
+
+trait Addressing: Copy {
+    fn read(self, cpu: &mut CPU) -> u8;
+    fn write(self, cpu: &mut CPU, val: u8);
+}
+
 // Decodes a single-byte opcode into a richer Instruction data structure
 pub fn decode(opcode: OpCode) -> Instruction {
     let (mnemonic, mode, cycles) =
