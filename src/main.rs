@@ -1,13 +1,17 @@
 mod cpu;
 
+use std::fs::File;
+use std::io::Read;
+
 use cpu::instructions;
 use cpu::instructions::Instruction;
 
 fn main() {
-    println!("Hello, world!");
+    let mut file = File::open("smb.nes").unwrap();
+    let mut program = Vec::new();
+    file.read_to_end(&mut program);
 
-    let program: Vec<u8> = vec![0x00];
     program.iter()
         .map(move |instr| instructions::decode(*instr))
-        .for_each(|instr| println!("{:?}", instr));
+        .for_each(|instr| println!("{}", instr));
 }

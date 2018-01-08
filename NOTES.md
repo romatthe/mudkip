@@ -35,6 +35,9 @@ On a real-world NES, all three devices run completely in parralel. However, givi
 
 * Most common (ugly) solution: the CPU keeping an exact track of how many cycles the current operation had taken, and then passing that number to the audio and picture processing units to see whether, in that amount of time, they could have done something themselves. 
 
+* Another suggestion I read was on using memory accesses to synchronise hardware in a transparent way without having to pass around a CPU cycle count variable to other devices. In my sequential program I implemented this by writing wrapper functions which guard around access to the CPU memory, and whenever the CPU wants to read or write to memory it has to go through the wrapper functions. These functions do indeed pass the byte to be written on to the real CPU memory (or return the byte to be read from the real memory), but they also allows the audio and picture processing units to advance by calling ppu_step and
+apu_step.
+
 ### Zero page addressing mode
 
 The CPU has a few addressing modes. One of them, `zero page`, takes a one-byte address instead of a two-byte address as an operand. This limits the addressing space to the first half (`$0000` to `$00FF`) of the accessible memory (hence, the "zero page"), and allows the instructions to be written without using the additional `$00`, and thus requires less CPU cycles to complete.
@@ -61,3 +64,10 @@ There are three general types of interrupts:
 
 The CPU can also generate "fake" interrupts by a programmer giving it the BRK opcode, which are treated as IRQ interrupts and
 trap to the IRQ handler.
+
+
+## Cool Stuff
+
+Cycle Accuracy in JSBeeb by Matt Godbolt: https://www.youtube.com/watch?v=7WuRq-Wmw5o&t=26%3A33s
+
+Debugger in Godbolt's JSBeed: https://www.youtube.com/watch?v=7WuRq-Wmw5o&t=29m00s
