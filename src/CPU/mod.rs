@@ -134,6 +134,11 @@ impl Cpu {
         Cpu { memory: [0; 2048], registers: CpuRegisters::new() }
     }
 
+    // Takes a single-step through the execution process, reading the first instruction at the Program Counter and executing it
+    fn step() {
+
+    }
+
     // Read from memory at PC, then increment
     fn read_one(&mut self) -> u8 {
         let pc = self.registers.pc;
