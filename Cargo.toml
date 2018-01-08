@@ -4,3 +4,6 @@ version = "0.1.0"
 authors = ["romatthe <robin.mattheussen@gmail.com>"]
 
 [dependencies]
+nom = "3.2.1"
+byteorder = "1.2.1"
+bitflags = "1.0.1"

@@ -1,4 +1,10 @@
+#[macro_use]
+extern crate bitflags;
+#[macro_use]
+extern crate nom;
+
 mod cpu;
+mod nes;
 
 use std::fs::File;
 use std::io::Read;
@@ -14,4 +20,6 @@ fn main() {
     program.iter()
         .map(move |instr| instructions::decode(*instr))
         .for_each(|instr| println!("{}", instr));
+
+    nes::test();
 }
