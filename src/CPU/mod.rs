@@ -1,4 +1,5 @@
 pub mod instructions;
+pub mod memory;
 
 // The NES CPU had access to 2Kb (or 8192 bytes of RAM)
 // Ref: https://en.wikipedia.org/wiki/Nintendo_Entertainment_System#Technical_specifications
@@ -9,7 +10,7 @@ type WorkingMemory = [u8; 2048];
 type RegisterA = u8;        // Accumulator
 type RegisterX = u8;        // Index X register
 type RegisterY = u8;        // Index Y register
-type RegisterPC = u16;      // Program Counter register
+type RegisterPC = Address;      // Program Counter register
 type RegisterS = u8;        // Stack pointer
 type RegisterP = u8;        // Status register. Actually only has 6-bits that are useful. See below
 
@@ -111,7 +112,8 @@ impl Addressing for ZeroPageAddressing {
 
 pub struct Cpu {
     memory: WorkingMemory,
-    registers: CpuRegisters
+    registers: CpuRegisters,
+    pub program: Vec<u8>
 }
 
 struct CpuRegisters {
@@ -130,13 +132,42 @@ impl CpuRegisters {
 }
 
 impl Cpu {
-    fn new() -> Cpu {
-        Cpu { memory: [0; 2048], registers: CpuRegisters::new() }
+    pub fn new() -> Cpu {
+        Cpu { memory: [0; 2048], registers: CpuRegisters::new(), program: vec![] }
     }
 
     // Takes a single-step through the execution process, reading the first instruction at the Program Counter and executing it
-    fn step() {
+    pub fn step(&mut self) {
+        // Fetch the instruction currently at the Program Counter
+        //opcode := OpCode(cpu.memory.fetch(cpu.registers.PC))
+        //inst, ok := cpu.instructions[opcode]
 
+        // Raise the Program Counter
+        // Execute the current instruction, calling .exec() returns the amount of Cycles to consume
+        //cycles := inst.exec(cpu)
+
+        // Count cycles
+        //for _ = range cpu.clock.ticker.C {
+        //  cycles--
+
+        //  if cycles == 0 {
+        //    break
+        //  }
+        //}
+
+        let pc = self.registers.pc;
+        let instruction = instructions::decode(self.program[pc as usize]);
+
+        let operands = match instruction.length {
+            1 => vec![],
+            2 => vec![self.program[pc.wrapping_add(1) as usize]],
+            3 => vec![self.program[pc.wrapping_add(1) as usize], self.program[pc.wrapping_add(2) as usize]],
+            _ => panic!("Illegal OpCode definition")
+        };
+
+        println!("{} - Operands: {:?}", instruction, operands);
+
+        self.registers.pc = pc.wrapping_add(instruction.length as u16);
     }
 
     // Read from memory at PC, then increment

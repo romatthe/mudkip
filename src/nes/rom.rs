@@ -97,15 +97,15 @@ impl Into<Region> for Flags9 {
 // Note: this is currently only supports the iNES format, not the NES2.0 format
 // Ref: https://wiki.nesdev.com/w/index.php/INES
 #[derive(Debug)]
-pub struct Rom {
+pub struct ROM {
     header: Header,
     pub prg_rom: Vec<u8>,
     pub chr_rom: Vec<u8>
 }
 
-impl Rom {
-    fn new(header: Header, prg_rom: Vec<u8>, chr_rom: Vec<u8>) -> Rom {
-        Rom { header: header, prg_rom: prg_rom, chr_rom: chr_rom }
+impl ROM {
+    fn new(header: Header, prg_rom: Vec<u8>, chr_rom: Vec<u8>) -> ROM {
+        ROM { header: header, prg_rom: prg_rom, chr_rom: chr_rom }
     }
 }
 
@@ -120,14 +120,13 @@ pub struct Header {
     mapper: u8
 }
 
-pub fn load_from_file(file: &str) -> Result<Rom, &'static str> {
+pub fn load_from_file(file: &mut File) -> Result<ROM, &'static str> {
     let mut buf: Vec<u8> = vec![];
-    let mut f = File::open(file).unwrap();
-    f.read_to_end(&mut buf);
+    file.read_to_end(&mut buf);
     load(&mut buf)
 }
 
-pub fn load(buf: &mut Vec<u8>) -> Result<Rom, &'static str> {
+pub fn load(buf: &mut Vec<u8>) -> Result<ROM, &'static str> {
     match parse_ines(&buf) {
         IResult::Incomplete(needed) => Err("Failed to parse ROM file"),
         IResult::Done(_, val)       => Ok(val),
@@ -153,7 +152,7 @@ impl Header {
     }
 }
 
-named!(parse_ines<&[u8], Rom>,
+named!(parse_ines<&[u8], ROM>,
     do_parse!(
         header:     parse_header     >>
                     // If bit 2 in flags6 is set (aka the Trainer flag), the next 512 bytes contain a trainer
@@ -161,7 +160,7 @@ named!(parse_ines<&[u8], Rom>,
         prg_rom:    take!(header.prg_size * PRG_ROM_PAGE_LENGTH) >>
         chr_rom:    take!(header.chr_size * CHR_ROM_PAGE_LENGTH) >>
 
-        (Rom::new(header, prg_rom.into(), chr_rom.into()))
+        (ROM::new(header, prg_rom.into(), chr_rom.into()))
     )
 );
 
