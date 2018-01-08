@@ -80,36 +80,6 @@ struct PostIndexedIndirectAddressing;
 #[derive(Debug, Copy, Clone)]
 struct RelativeAddressing;
 
-// Each addressing-mode is a function that returns the address for the next function to use
-type AddressingModeFn = fn (cpu: &Cpu) -> Address;
-
-trait Addressing: Copy {
-    fn read(&self, cpu: &mut Cpu) -> u8;
-    fn write(&self, cpu: &mut Cpu, val: u8);
-}
-
-// Ref: http://www.thealmightyguru.com/Games/Hacking/Wiki/index.php?title=Immediate_Addressing
-impl Addressing for ImmediateAddressing {
-    fn read(&self, cpu: &mut Cpu) -> u8 {
-        cpu.read_one()
-    }
-
-    fn write(&self, cpu: &mut Cpu, value: u8) {
-        panic!("Tried to write {:02X} to an immediate address.", value);
-    }
-}
-
-impl Addressing for ZeroPageAddressing {
-    fn read(&self, cpu: &mut Cpu) -> u8 {
-        let address = cpu.read_one_indexed();
-        cpu.memory[address as usize]
-    }
-
-    fn write(&self, cpu: &mut Cpu, value: u8) {
-
-    }
-}
-
 pub struct Cpu {
     memory: WorkingMemory,
     registers: CpuRegisters,
@@ -168,18 +138,5 @@ impl Cpu {
         println!("{} - Operands: {:?}", instruction, operands);
 
         self.registers.pc = pc.wrapping_add(instruction.length as u16);
-    }
-
-    // Read from memory at PC, then increment
-    fn read_one(&mut self) -> u8 {
-        let pc = self.registers.pc;
-        self.registers.pc = pc.wrapping_add(1); // Increase PC by 1 to read next instruction
-        self.memory[pc as usize]
-    }
-
-    fn read_one_indexed(&mut self) -> u16 {
-        let pc = self.registers.pc as u16;
-        self.registers.pc = pc.wrapping_add(1);             // Increase PC by 1 to read next instruction
-        self.memory[pc as usize] as u16     // Treat the read byte as a two-byte address, eg: $FF -> $00FF
     }
 }

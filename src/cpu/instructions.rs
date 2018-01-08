@@ -1,7 +1,6 @@
 use std::fmt::Display;
 use std::fmt::Formatter;
 use std::fmt::Error;
-use cpu::Addressing;
 use cpu::AddressingMode;
 
 type OpCode = u8;
