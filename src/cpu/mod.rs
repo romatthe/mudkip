@@ -10,9 +10,8 @@ type WorkingMemory = [u8; 2048];
 type RegisterA = u8;        // Accumulator
 type RegisterX = u8;        // Index X register
 type RegisterY = u8;        // Index Y register
-type RegisterPC = Address;      // Program Counter register
-type RegisterS = u8;        // Stack pointer
-type RegisterP = u8;        // Status register. Actually only has 6-bits that are useful. See below
+type RegisterPC = Address;  // Program Counter register
+type RegisterSP = u8;       // Stack pointer
 
 // Structure representing the Status Register
 // Some notes on the status register
@@ -103,13 +102,12 @@ struct CpuRegisters {
     x: RegisterX,
     y: RegisterY,
     pc: RegisterPC,
-    s: RegisterS,
-    p: RegisterP
+    sp: RegisterSP
 }
 
 impl CpuRegisters {
     fn new() -> CpuRegisters {
-        CpuRegisters { a: 0x00, x: 0x00, y: 0x00, pc: 0x00, s: 0x00, p: 0x00 }
+        CpuRegisters { a: 0x00, x: 0x00, y: 0x00, pc: 0x00, sp: 0x00 }
     }
 }
 
@@ -121,36 +119,24 @@ impl Cpu {
 
     // Powers on the machine and sets the initial state
     // Ref: https://wiki.nesdev.com/w/index.php/CPU_power_up_state
+    // Ref: https://github.com/fogleman/nes/blob/master/nes/cpu.go#L261
     pub fn power_on (&mut self) {
-        // TODO need clearer info on what this does precisely
-        self.status.bits = 0xfd; // This is 0b1111 1101
+        // TODO need clearer info on what this does precisely, Program Counter probably isn't correct
+        self.status.bits = 0x24;    // This is 0b0010_0100
+        self.registers.sp = 0xFD;
     }
 
     // Resets the machine and sets the initial state
     // Ref: https://wiki.nesdev.com/w/index.php/CPU_power_up_state
+    // Ref: https://github.com/fogleman/nes/blob/master/nes/cpu.go#L261
     pub fn reset(&mut self) {
-        // TODO need clearer info on what this does precisely
+        // TODO need clearer info on what this does precisely, Program Counter probably isn't correct
+        self.status.bits = 0x24;    // This is 0b0010_0100
+        self.registers.sp = 0xFD;
     }
 
     // Takes a single-step through the execution process, reading the first instruction at the Program Counter and executing it
     pub fn step(&mut self) {
-        // Fetch the instruction currently at the Program Counter
-        //opcode := OpCode(cpu.memory.fetch(cpu.registers.PC))
-        //inst, ok := cpu.instructions[opcode]
-
-        // Raise the Program Counter
-        // Execute the current instruction, calling .exec() returns the amount of Cycles to consume
-        //cycles := inst.exec(cpu)
-
-        // Count cycles
-        //for _ = range cpu.clock.ticker.C {
-        //  cycles--
-
-        //  if cycles == 0 {
-        //    break
-        //  }
-        //}
-
         let pc = self.registers.pc;
         let instruction = instructions::decode(self.program[pc as usize]);
 
