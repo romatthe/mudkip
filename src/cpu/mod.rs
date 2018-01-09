@@ -14,6 +14,7 @@ type RegisterPC = Address;      // Program Counter register
 type RegisterS = u8;        // Stack pointer
 type RegisterP = u8;        // Status register. Actually only has 6-bits that are useful. See below
 
+// Structure representing the Status Register
 // Some notes on the status register
 // Ref: https://wiki.nesdev.com/w/index.php/CPU_status_flag_behavior
 // 7  bit  0
@@ -24,9 +25,19 @@ type RegisterP = u8;        // Status register. Actually only has 6-bits that ar
 // |||| ||+-- Zero: 1 if last operation resulted in a 0 value
 // |||| |+--- Interrupt: Interrupt inhibit (0: /IRQ and /NMI get through; 1: only /NMI gets through)
 // |||| +---- Decimal: 1 to make ADC and SBC use binary-coded decimal arithmetic (ignored on second-source 6502 like that in the NES)
-// ||++------ s: No effect, used by the stack copy, see note below
+// ||++------ s: No effect, used by the stack copy
 // |+-------- Overflow: 1 if last ADC or SBC resulted in signed overflow, or D6 from last BIT
 // +--------- Negative: Set to bit 7 of the last operation
+bitflags! {
+    struct StatusRegister: u8 {
+        const C = 0b0000_0001;  // Carry
+        const Z = 0b0000_0010;  // Zero
+        const I = 0b0000_0100;  // Interrupt
+        const D = 0b0000_1000;  // Decimal
+        const V = 0b0100_0000;  // Overflow
+        const N = 0b1000_0000;  // Negative
+    }
+}
 
 type Address = u16;
 
@@ -83,6 +94,7 @@ struct RelativeAddressing;
 pub struct Cpu {
     memory: WorkingMemory,
     registers: CpuRegisters,
+    status: StatusRegister,
     pub program: Vec<u8>
 }
 
@@ -103,7 +115,21 @@ impl CpuRegisters {
 
 impl Cpu {
     pub fn new() -> Cpu {
-        Cpu { memory: [0; 2048], registers: CpuRegisters::new(), program: vec![] }
+        // TODO: Figure out initial state of the Status Register
+        Cpu { memory: [0; 2048], registers: CpuRegisters::new(), status: StatusRegister{ bits: 0 }, program: vec![] }
+    }
+
+    // Powers on the machine and sets the initial state
+    // Ref: https://wiki.nesdev.com/w/index.php/CPU_power_up_state
+    pub fn power_on (&mut self) {
+        // TODO need clearer info on what this does precisely
+        self.status.bits = 0xfd; // This is 0b1111 1101
+    }
+
+    // Resets the machine and sets the initial state
+    // Ref: https://wiki.nesdev.com/w/index.php/CPU_power_up_state
+    pub fn reset(&mut self) {
+        // TODO need clearer info on what this does precisely
     }
 
     // Takes a single-step through the execution process, reading the first instruction at the Program Counter and executing it
