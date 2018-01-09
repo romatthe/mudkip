@@ -30,8 +30,8 @@ impl NES {
         loop {
             self.cpu.step();
 
-            stdin().read_line(&mut guess)
-                .expect("Failed to read line");
+            //stdin().read_line(&mut guess)
+            //    .expect("Failed to read line");
         }
     }
 }

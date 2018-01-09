@@ -234,7 +234,7 @@ pub fn decode(opcode: OpCode) -> Instruction {
             // NOP
             0xea => (Mnemonic::NOP, AddressingMode::IMP, 1, 2),
 
-            _    => (Mnemonic::UNKNOWN, AddressingMode::UNKNOWN, 0, 0)
+            _    => (Mnemonic::UNKNOWN, AddressingMode::UNKNOWN, 1, 1)
         };
 
     Instruction::new(opcode, mnemonic, mode, length, cycles)

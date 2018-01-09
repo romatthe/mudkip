@@ -128,12 +128,7 @@ impl Cpu {
         let pc = self.registers.pc;
         let instruction = instructions::decode(self.program[pc as usize]);
 
-        let operands = match instruction.length {
-            1 => vec![],
-            2 => vec![self.program[pc.wrapping_add(1) as usize]],
-            3 => vec![self.program[pc.wrapping_add(1) as usize], self.program[pc.wrapping_add(2) as usize]],
-            _ => panic!("Illegal OpCode definition")
-        };
+        let operands: Vec<_> = self.program.iter().skip(pc as usize).take(instruction.length as usize).collect();
 
         println!("{} - Operands: {:?}", instruction, operands);
 
