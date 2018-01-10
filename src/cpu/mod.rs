@@ -1,3 +1,4 @@
+pub mod disassembler;
 pub mod instructions;
 pub mod memory;
 
@@ -47,7 +48,7 @@ type Address = u16;
 pub enum AddressingMode {
     ZPG,        // ZeroPage             Operand is an address and only the low byte is used,         ex: LDA $EE
     ZPX,        // Indexed ZeroPage X   Operand is 1-byte address, X register is added to it         eg: STA $00,X
-    ZPY,        // Indexed Zeropage Y   Operand is 1-byte address, Y register is added to it         eg: STA $00,Y
+    ZPY,        // Indexed ZeroPage Y   Operand is 1-byte address, Y register is added to it         eg: STA $00,Y
     ABS,        // Absolute             Operand is an address and and both bytes are used,           ex: LDA $16A0
     ABX,        // Indexed Absolute X   Operand is 2-byte address, X register is added to it         eg: STA $1000,X
     ABY,        // Indexed Absolute Y   Operand is 2-byte address, Y register is added to it         eg: STA $1000,Y

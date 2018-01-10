@@ -5,9 +5,9 @@ use std::io::Read;
 
 use nom::{IResult, be_u8};
 
-const TRAINER_LENGTH: usize = 512;
-const PRG_ROM_PAGE_LENGTH: usize = 16384;
-const CHR_ROM_PAGE_LENGTH: usize = 8192;
+pub const TRAINER_LENGTH: usize = 512;
+pub const PRG_ROM_PAGE_LENGTH: usize = 16384;
+pub const CHR_ROM_PAGE_LENGTH: usize = 8192;
 
 #[derive(PartialEq, Debug, Clone, Copy)]
 pub enum ScreenMode {
@@ -98,7 +98,7 @@ impl Into<Region> for Flags9 {
 // Ref: https://wiki.nesdev.com/w/index.php/INES
 #[derive(Debug)]
 pub struct ROM {
-    header: Header,
+    pub header: Header,
     pub prg_rom: Vec<u8>,
     pub chr_rom: Vec<u8>
 }
@@ -111,13 +111,13 @@ impl ROM {
 
 #[derive(Debug)]
 pub struct Header {
-    prg_size: usize,
-    chr_size: usize,
-    trainer: bool,
-    screen_mode: ScreenMode,
-    system: System,
-    region: Region,
-    mapper: u8
+    pub prg_size: usize,
+    pub chr_size: usize,
+    pub trainer: bool,
+    pub screen_mode: ScreenMode,
+    pub system: System,
+    pub region: Region,
+    pub mapper: u8
 }
 
 pub fn load_from_file(file: &mut File) -> Result<ROM, &'static str> {

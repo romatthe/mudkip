@@ -1,31 +1,33 @@
-use std::fmt::Display;
-use std::fmt::Formatter;
-use std::fmt::Error;
+use std::fmt::{Display, Error, Formatter};
+use std::io::Cursor;
+use byteorder::{LittleEndian, ReadBytesExt};
 use cpu::AddressingMode;
+use cpu::instructions;
+use cpu::instructions::{Instruction, Mnemonic, OpCode};
+use nes::rom::{ROM, PRG_ROM_PAGE_LENGTH};
 
-pub type OpCode = u8;
-
-// Mnemonics for all 6502 CPU instructions
-// Ref: http://www.thealmightyguru.com/Games/Hacking/Wiki/index.php/6502_Opcodes
-#[derive(PartialEq, Debug)]
-pub enum Mnemonic {
-    LDA, LDX, LDY, STA, STX, STY, TAX, TAY, TSX, TXA, TXS, TYA,     // Storage
-    ADC, DEC, DEX, DEY, INC, INX, INY, SBC,                         // Math
-    AND, ASL, BIT, EOR, LSR, ORA, ROL, ROR,                         // Bitwise
-    BCC, BCS, BEQ, BMI, BNE, BPL, BVC, BVS,                         // Branch
-    JMP, JSR, RTI, RTS,                                             // Jump
-    CLC, CLD, CLI, CLV, CMP, CPX, CPY, SEC, SED, SEI,               // Registers
-    PHA, PHP, PLA, PLP,                                             // Stack
-    BRK, NOP,                                                       // System
-    UNKNOWN
+#[derive(Debug)]
+pub struct InstructionDeNovo {
+    pub address: u16,
+    pub opcode: OpCode,
+    pub mnemonic: Mnemonic,
+    pub mode: AddressingMode,
+    pub length: u8,
+    pub cycles: u8,
+    pub operands: Vec<u8>
 }
 
-// Decodes a single-byte opcode into a richer Instruction data structure
-// Ref: http://www.6502.org/tutorials/6502opcodes.html
-// Ref: http://www.thealmightyguru.com/Games/Hacking/Wiki/index.php/6502_Opcodes
-pub fn decode(opcode: OpCode) -> Instruction {
-    let (mnemonic, mode, length, cycles) =
-        match opcode {
+// Disassembles the entire program into plain 6502 assembly
+// Result is redirected to stdout
+pub fn disassemble(rom: ROM) {
+    let prg_size = rom.header.prg_size * PRG_ROM_PAGE_LENGTH;
+
+    let mut pc = 0;
+
+    while pc < prg_size {
+        let opcode = rom.prg_rom[pc];
+
+        let (mnemonic, mode, length, cycles) = match opcode {
             // LDA
             0xa9 => (Mnemonic::LDA, AddressingMode::IMM, 2, 2),
             0xa5 => (Mnemonic::LDA, AddressingMode::ZPG, 2, 3),
@@ -234,29 +236,59 @@ pub fn decode(opcode: OpCode) -> Instruction {
             // NOP
             0xea => (Mnemonic::NOP, AddressingMode::IMP, 1, 2),
 
-            _    => (Mnemonic::UNKNOWN, AddressingMode::UNKNOWN, 1, 1)
+            _ => (Mnemonic::UNKNOWN, AddressingMode::UNKNOWN, 1, 1)
         };
 
-    Instruction::new(opcode, mnemonic, mode, length, cycles)
-}
+        let operands = match length {
+            1 => vec![],
+            2 => vec![rom.prg_rom[pc + 1]],
+            3 => vec![rom.prg_rom[pc + 1], rom.prg_rom[pc + 2]],
+            _ => panic!("Illegal instruction definition found! {:?} - {:?} - {:?}", opcode, mnemonic, length)
+        };
 
-#[derive(Debug)]
-pub struct Instruction {
-    pub opcode: OpCode,
-    pub mnemonic: Mnemonic,
-    pub mode: AddressingMode,
-    pub length: u8,
-    pub cycles: u8
-}
+        let pipodekloon = InstructionDeNovo {
+            address: (pc + 0x8000) as u16,
+            opcode: opcode,
+            mnemonic: mnemonic,
+            mode: mode,
+            length: length as u8,
+            cycles: cycles,
+            operands: operands
+        };
 
-impl Instruction {
-    fn new(opcode: OpCode, mnemonic: Mnemonic, mode: AddressingMode, length: u8, cycles: u8) -> Instruction {
-        Instruction { opcode: opcode, mnemonic: mnemonic, mode: mode, length: length, cycles: cycles }
+        println!("{}", pipodekloon);
+
+        pc = pc + length;
     }
 }
 
-impl Display for Instruction {
+impl Display for InstructionDeNovo {
     fn fmt(&self, f: &mut Formatter) -> Result<(), Error> {
-        write!(f, "(0x{:02x}\t{:?}\t{:?}\tLength: {}\tCycles: {})", self.opcode, self.mnemonic, self.mode, self.length, self.cycles)
+
+        match (&self.mode, &self.mnemonic) {
+            (&AddressingMode::ZPG, _) => write!(f, "${:04X}   {:02X}     {:?} ${}",                      self.address, self.opcode, self.mnemonic, to_little_endian_str(&self.operands)),
+            (&AddressingMode::ZPX, _) => write!(f, "${:04X}   {:02X}{:02X}   {:?} ${:02X},X",            self.address, self.opcode, self.operands[0], self.mnemonic, self.operands[0]),
+            (&AddressingMode::ZPY, _) => write!(f, "${:04X}   {:02X}{:02X}   {:?} ${:02X},Y",            self.address, self.opcode, self.operands[0], self.mnemonic, self.operands[0]),
+            (&AddressingMode::ABS, _) => write!(f, "${:04X}   {:02X}{:02X}{:02X} {:?} ${}",              self.address, self.opcode, self.operands[0], self.operands[1], self.mnemonic, to_little_endian_str(&self.operands)),
+            (&AddressingMode::ABX, _) => write!(f, "${:04X}   {:02X}{:02X}{:02X} {:?} ${},X",            self.address, self.opcode, self.operands[0], self.operands[1], self.mnemonic, to_little_endian_str(&self.operands)),
+            (&AddressingMode::ABY, _) => write!(f, "${:04X}   {:02X}{:02X}{:02X} {:?} ${},Y",            self.address, self.opcode, self.operands[0], self.operands[1], self.mnemonic, to_little_endian_str(&self.operands)),
+            (&AddressingMode::IND, _) => write!(f, "${:04X}   {:02X}{:02X}{:02X} {:?} $({})",            self.address, self.opcode, self.operands[0], self.operands[1], self.mnemonic, to_little_endian_str(&self.operands)),
+            (&AddressingMode::IMP, _) => write!(f, "${:04X}   {:02X}     {:?}",                          self.address, self.opcode, self.mnemonic),
+            (&AddressingMode::ACC, _) => write!(f, "${:04X}   {:02X}     {:?} A",                        self.address, self.opcode, self.mnemonic),
+            (&AddressingMode::IMM, _) => write!(f, "${:04X}   {:02X}{:02X}   {:?} #${:02X}",             self.address, self.opcode, self.operands[0], self.mnemonic, self.operands[0]),
+            (&AddressingMode::REL, _) => write!(f, "${:04X}   {:02X}{:02X}   {:?} ${:02X}\t; {} ({})",   self.address, self.opcode, self.operands[0], self.mnemonic, self.operands[0], "TODO", self.operands[0] as i8),
+            (&AddressingMode::IDX, _) => write!(f, "${:04X}   {:02X}{:02X}   {:?} (${:02X},X)",          self.address, self.opcode, self.operands[0], self.mnemonic, self.operands[0]),
+            (&AddressingMode::IDY, _) => write!(f, "${:04X}   {:02X}{:02X}   {:?} (${:02X}),Y",          self.address, self.opcode, self.operands[0], self.mnemonic, self.operands[0]),
+            (&AddressingMode::UNKNOWN, _) => write!(f, "${:04X}   {:02X}     .byte ${:02X}",             self.address, self.opcode, self.opcode)
+        }
+    }
+}
+
+fn to_little_endian_str(bytes: &Vec<u8>) -> String {
+    match bytes.len() {
+        0 => "".to_string(),
+        1 => format!("{:02X}", bytes[0]),
+        2 => { let mut ops = Cursor::new(vec![bytes[0], bytes[1]]); format!("{:04X}", ops.read_u16::<LittleEndian>().unwrap()) },
+        _ => panic!("Illegal instruction definition found!")
     }
 }
