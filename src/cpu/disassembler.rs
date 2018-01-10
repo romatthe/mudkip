@@ -266,20 +266,20 @@ impl Display for InstructionDeNovo {
     fn fmt(&self, f: &mut Formatter) -> Result<(), Error> {
 
         match (&self.mode, &self.mnemonic) {
-            (&AddressingMode::ZPG, _) => write!(f, "${:04X}   {:02X}     {:?} ${}",                      self.address, self.opcode, self.mnemonic, to_little_endian_str(&self.operands)),
-            (&AddressingMode::ZPX, _) => write!(f, "${:04X}   {:02X}{:02X}   {:?} ${:02X},X",            self.address, self.opcode, self.operands[0], self.mnemonic, self.operands[0]),
-            (&AddressingMode::ZPY, _) => write!(f, "${:04X}   {:02X}{:02X}   {:?} ${:02X},Y",            self.address, self.opcode, self.operands[0], self.mnemonic, self.operands[0]),
-            (&AddressingMode::ABS, _) => write!(f, "${:04X}   {:02X}{:02X}{:02X} {:?} ${}",              self.address, self.opcode, self.operands[0], self.operands[1], self.mnemonic, to_little_endian_str(&self.operands)),
-            (&AddressingMode::ABX, _) => write!(f, "${:04X}   {:02X}{:02X}{:02X} {:?} ${},X",            self.address, self.opcode, self.operands[0], self.operands[1], self.mnemonic, to_little_endian_str(&self.operands)),
-            (&AddressingMode::ABY, _) => write!(f, "${:04X}   {:02X}{:02X}{:02X} {:?} ${},Y",            self.address, self.opcode, self.operands[0], self.operands[1], self.mnemonic, to_little_endian_str(&self.operands)),
-            (&AddressingMode::IND, _) => write!(f, "${:04X}   {:02X}{:02X}{:02X} {:?} $({})",            self.address, self.opcode, self.operands[0], self.operands[1], self.mnemonic, to_little_endian_str(&self.operands)),
-            (&AddressingMode::IMP, _) => write!(f, "${:04X}   {:02X}     {:?}",                          self.address, self.opcode, self.mnemonic),
-            (&AddressingMode::ACC, _) => write!(f, "${:04X}   {:02X}     {:?} A",                        self.address, self.opcode, self.mnemonic),
-            (&AddressingMode::IMM, _) => write!(f, "${:04X}   {:02X}{:02X}   {:?} #${:02X}",             self.address, self.opcode, self.operands[0], self.mnemonic, self.operands[0]),
-            (&AddressingMode::REL, _) => write!(f, "${:04X}   {:02X}{:02X}   {:?} ${:02X}\t; {} ({})",   self.address, self.opcode, self.operands[0], self.mnemonic, self.operands[0], "TODO", self.operands[0] as i8),
-            (&AddressingMode::IDX, _) => write!(f, "${:04X}   {:02X}{:02X}   {:?} (${:02X},X)",          self.address, self.opcode, self.operands[0], self.mnemonic, self.operands[0]),
-            (&AddressingMode::IDY, _) => write!(f, "${:04X}   {:02X}{:02X}   {:?} (${:02X}),Y",          self.address, self.opcode, self.operands[0], self.mnemonic, self.operands[0]),
-            (&AddressingMode::UNKNOWN, _) => write!(f, "${:04X}   {:02X}     .byte ${:02X}",             self.address, self.opcode, self.opcode)
+            (&AddressingMode::ZPG, _) => write!(f, "${:04X}   {:02X}       {:?} ${}",                      self.address, self.opcode, self.mnemonic, to_little_endian_str(&self.operands)),
+            (&AddressingMode::ZPX, _) => write!(f, "${:04X}   {:02X}{:02X}     {:?} ${:02X},X",            self.address, self.opcode, self.operands[0], self.mnemonic, self.operands[0]),
+            (&AddressingMode::ZPY, _) => write!(f, "${:04X}   {:02X}{:02X}     {:?} ${:02X},Y",            self.address, self.opcode, self.operands[0], self.mnemonic, self.operands[0]),
+            (&AddressingMode::ABS, _) => write!(f, "${:04X}   {:02X}{:02X}{:02X}   {:?} ${}",              self.address, self.opcode, self.operands[0], self.operands[1], self.mnemonic, to_little_endian_str(&self.operands)),
+            (&AddressingMode::ABX, _) => write!(f, "${:04X}   {:02X}{:02X}{:02X}   {:?} ${},X",            self.address, self.opcode, self.operands[0], self.operands[1], self.mnemonic, to_little_endian_str(&self.operands)),
+            (&AddressingMode::ABY, _) => write!(f, "${:04X}   {:02X}{:02X}{:02X}   {:?} ${},Y",            self.address, self.opcode, self.operands[0], self.operands[1], self.mnemonic, to_little_endian_str(&self.operands)),
+            (&AddressingMode::IND, _) => write!(f, "${:04X}   {:02X}{:02X}{:02X}   {:?} $({})",            self.address, self.opcode, self.operands[0], self.operands[1], self.mnemonic, to_little_endian_str(&self.operands)),
+            (&AddressingMode::IMP, _) => write!(f, "${:04X}   {:02X}       {:?}",                          self.address, self.opcode, self.mnemonic),
+            (&AddressingMode::ACC, _) => write!(f, "${:04X}   {:02X}       {:?} A",                        self.address, self.opcode, self.mnemonic),
+            (&AddressingMode::IMM, _) => write!(f, "${:04X}   {:02X}{:02X}     {:?} #${:02X}",             self.address, self.opcode, self.operands[0], self.mnemonic, self.operands[0]),
+            (&AddressingMode::REL, _) => write!(f, "${:04X}   {:02X}{:02X}     {:?} ${:02X}\t; ${:04X} ({})",   self.address, self.opcode, self.operands[0], self.mnemonic, self.operands[0], jump_to_address(self.address + self.length as u16, self.operands[0]), self.operands[0] as i8),
+            (&AddressingMode::IDX, _) => write!(f, "${:04X}   {:02X}{:02X}     {:?} (${:02X},X)",          self.address, self.opcode, self.operands[0], self.mnemonic, self.operands[0]),
+            (&AddressingMode::IDY, _) => write!(f, "${:04X}   {:02X}{:02X}     {:?} (${:02X}),Y",          self.address, self.opcode, self.operands[0], self.mnemonic, self.operands[0]),
+            (&AddressingMode::UNKNOWN, _) => write!(f, "${:04X}   {:02X}       .byte ${:02X}",             self.address, self.opcode, self.opcode)
         }
     }
 }
@@ -291,4 +291,15 @@ fn to_little_endian_str(bytes: &Vec<u8>) -> String {
         2 => { let mut ops = Cursor::new(vec![bytes[0], bytes[1]]); format!("{:04X}", ops.read_u16::<LittleEndian>().unwrap()) },
         _ => panic!("Illegal instruction definition found!")
     }
+}
+
+fn jump_to_address(address: u16, distance: u8) -> u16 {
+    let distance = distance as i8;
+    let address = address as i32;
+    //println!("Address u16: {}", address);
+    //println!("Address i16: {}", address as i16);
+    //println!("Address i32: {}", address as i32);
+    //println!("Result as i32 {}", address + (distance as i32));
+    //println!("Result as u16 {}", (address + (distance as i32)) as u16);
+    (address + (distance as i32)) as u16
 }
