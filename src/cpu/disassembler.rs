@@ -276,7 +276,7 @@ impl Display for InstructionDeNovo {
             (&AddressingMode::IMP, _) => write!(f, "${:04X}   {:02X}       {:?}",                          self.address, self.opcode, self.mnemonic),
             (&AddressingMode::ACC, _) => write!(f, "${:04X}   {:02X}       {:?} A",                        self.address, self.opcode, self.mnemonic),
             (&AddressingMode::IMM, _) => write!(f, "${:04X}   {:02X}{:02X}     {:?} #${:02X}",             self.address, self.opcode, self.operands[0], self.mnemonic, self.operands[0]),
-            (&AddressingMode::REL, _) => write!(f, "${:04X}   {:02X}{:02X}     {:?} ${:02X}\t; ${:04X} ({})",   self.address, self.opcode, self.operands[0], self.mnemonic, self.operands[0], jump_to_address(self.address + self.length as u16, self.operands[0]), self.operands[0] as i8),
+            (&AddressingMode::REL, _) => write!(f, "${:04X}   {:02X}{:02X}     {:?} ${:02X}\t; ${:04X} ({})",   self.address, self.opcode, self.operands[0], self.mnemonic, self.operands[0], jump_to_address(self.address.wrapping_add(self.length as u16), self.operands[0]), self.operands[0] as i8),
             (&AddressingMode::IDX, _) => write!(f, "${:04X}   {:02X}{:02X}     {:?} (${:02X},X)",          self.address, self.opcode, self.operands[0], self.mnemonic, self.operands[0]),
             (&AddressingMode::IDY, _) => write!(f, "${:04X}   {:02X}{:02X}     {:?} (${:02X}),Y",          self.address, self.opcode, self.operands[0], self.mnemonic, self.operands[0]),
             (&AddressingMode::UNKNOWN, _) => write!(f, "${:04X}   {:02X}       .byte ${:02X}",             self.address, self.opcode, self.opcode)
