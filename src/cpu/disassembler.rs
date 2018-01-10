@@ -246,7 +246,7 @@ pub fn disassemble(rom: ROM) {
             _ => panic!("Illegal instruction definition found! {:?} - {:?} - {:?}", opcode, mnemonic, length)
         };
 
-        let pipodekloon = InstructionDeNovo {
+        let instr = InstructionDeNovo {
             address: (pc + 0x8000) as u16,
             opcode: opcode,
             mnemonic: mnemonic,
@@ -256,9 +256,9 @@ pub fn disassemble(rom: ROM) {
             operands: operands
         };
 
-        println!("{}", pipodekloon);
+        println!("{}", instr);
 
-        pc = pc + length;
+        pc = pc.wrapping_add(length);
     }
 }
 
